@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z-Crafting | Workbench</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div id="app" style="display: none;">
+        <div class="workbench-frame">
+            <!-- Sidebar -->
+            <nav class="sidebar">
+                <div class="brand">
+                    <div class="brand-icon">
+                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                    </div>
+                    <span>WORKBENCH</span>
+                </div>
+                <div class="nav-list" id="categories">
+                    <!-- Categories -->
+                </div>
+
+                <div class="character-stats">
+                    <div class="stat-header">
+                        <span class="stat-label">CRAFTING LEVEL</span>
+                        <span id="player-level" class="stat-value">1</span>
+                    </div>
+                    <div class="xp-container">
+                        <div id="xp-bar" class="xp-fill" style="width: 0%"></div>
+                        <span id="xp-text" class="xp-overlay">0 / 100 XP</span>
+                    </div>
+                </div>
+
+                <div class="session-state">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>STATION ACTIVE</span>
+                </div>
+            </nav>
+
+            <!-- Main Workspace -->
+            <main class="workspace">
+                <header class="workspace-header">
+                    <div class="title-label">
+                        <h1 id="category-title">BREADBOARD</h1>
+                        <p id="category-count">0 items ready</p>
+                    </div>
+                    <div class="search-field">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="search-input" placeholder="Search blueprints...">
+                    </div>
+                </header>
+
+                <div class="items-grid" id="recipes-grid">
+                    <!-- Cards -->
+                </div>
+            </main>
+
+            <!-- Blueprint Inspector -->
+            <aside class="blueprint-panel" id="details-panel">
+                <div class="empty-workspace" id="no-selection">
+                    <div class="stencil-icon"><i class="fa-solid fa-pen-ruler"></i></div>
+                    <h3>SELECT A BLUEPRINT</h3>
+                    <p>Place a schematic on the bench</p>
+                </div>
+
+                <div class="inspector-content" id="selection-details" style="display: none;">
+                    <div class="blueprint-preview">
+                        <div class="blueprint-texture"></div>
+                        <img id="item-icon" src="" alt="">
+                        <div class="time-label">
+                            <i class="fa-regular fa-clock"></i>
+                            <span id="item-time">0s</span>
+                        </div>
+                    </div>
+
+                    <div class="item-title">
+                        <h2 id="item-name">OBJECT NAME</h2>
+                        <div class="divider"></div>
+                    </div>
+
+                    <div class="details-scroll">
+                        <p class="summary-text" id="item-desc">Item specifications pending...</p>
+
+                        <section class="materials">
+                            <div class="header-row">
+                                <h3>COMPONENTS</h3>
+                                <span id="comp-count">0/0</span>
+                            </div>
+                            <div class="material-list" id="ingredients-list">
+                                <!-- Components -->
+                            </div>
+                        </section>
+                    </div>
+
+                    <footer class="panel-foot">
+                        <button class="craft-btn" id="craft-button">
+                            <span class="btn-text">START ASSEMBLY</span>
+                            <div class="btn-shine"></div>
+                        </button>
+                    </footer>
+                </div>
+            </aside>
+        </div>
+
+        <div class="exit-hint">
+            <span>ESC</span> EXIT WORKBENCH
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
