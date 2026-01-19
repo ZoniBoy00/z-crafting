@@ -1,4 +1,13 @@
 local activePortableTables = {}
+local staticTableProps = {}
+
+--------------------------------------------------------------------------------
+-- Utilities
+--------------------------------------------------------------------------------
+
+local function L(key, ...)
+    return Config.Locales[Config.Locale][key] and string.format(Config.Locales[Config.Locale][key], ...) or key
+end
 
 --------------------------------------------------------------------------------
 -- Crafting Menu Functions
@@ -6,22 +15,18 @@ local activePortableTables = {}
 
 -- Opens the custom NUI crafting interface with player data
 local function OpenCraftingMenu(categories)
-    lib.callback('z-crafting:getPlayerInventory', false, function(inventory)
-        -- Filter blueprints from inventory (used for unlock checks)
-        local blueprints = {}
-        for itemName in pairs(inventory.items or {}) do
-            if itemName:find('blueprint_') then
-                blueprints[#blueprints + 1] = itemName
-            end
-        end
+    lib.callback('z-crafting:getPlayerInventory', false, function(data)
+        if not data then return end
 
         -- Open NUI with all required data
         SetNuiFocus(true, true)
         SendNUIMessage({
             action = 'open',
             recipes = Config.Recipes,
-            inventory = inventory,
-            blueprints = blueprints,
+            inventory = data.items,
+            level = data.level,
+            xp = data.xp,
+            nextLevelXP = data.nextLevelXP,
             allowedCategories = categories or {'tools', 'materials'}
         })
     end)
@@ -38,14 +43,16 @@ RegisterNUICallback('craft', function(data, cb)
     local categoryName = data.category
     
     local recipe = nil
-    for _, r in ipairs(Config.Recipes[categoryName].items) do
-        if r.name == itemName then
-            recipe = r
-            break
+    if Config.Recipes[categoryName] then
+        for _, r in ipairs(Config.Recipes[categoryName].items) do
+            if r.name == itemName then
+                recipe = r
+                break
+            end
         end
     end
 
-    if not recipe then return end
+    if not recipe then return cb('ok') end
 
     -- Close NUI before starting progress bar
     SetNuiFocus(false, false)
@@ -54,39 +61,45 @@ RegisterNUICallback('craft', function(data, cb)
     -- Trigger crafting process
     lib.callback('z-crafting:craftItem', false, function(success, reason)
         if success then
-            if lib.progressBar({
+            local progress = lib.progressBar({
                 duration = recipe.duration,
-                label = _('crafting_progress', recipe.label),
+                label = L('crafting_progress', recipe.label),
                 useWhileDead = false,
                 canCancel = true,
                 disable = { move = true, car = true, combat = true, inventory = true },
                 anim = { dict = 'amb@prop_human_bum_bin@base', clip = 'base' }
-            }) then
+            })
+
+            if progress then
                 TriggerServerEvent('z-crafting:giveItem', recipe.name, categoryName)
             else
                 TriggerServerEvent('z-crafting:cancelCrafting')
             end
         else
-            lib.notify({ title = _('failed'), description = reason, type = 'error' })
+            lib.notify({ title = L('failed'), description = reason, type = 'error' })
         end
     end, itemName, categoryName)
     cb('ok')
 end)
 
--- Initialize Static Tables & Blips
+--------------------------------------------------------------------------------
+-- Initialization
+--------------------------------------------------------------------------------
+
+-- Initialize Static Tables
 CreateThread(function()
     for i, tableData in ipairs(Config.CraftingTables) do
-        -- Request and spawn the prop
         lib.requestModel(tableData.prop)
         local obj = CreateObject(tableData.prop, tableData.coords.x, tableData.coords.y, tableData.coords.z - 1.0, false, false, false)
         FreezeEntityPosition(obj, true)
         SetEntityHeading(obj, tableData.heading or 0.0)
         
-        -- Add Ox Target Interaction
+        staticTableProps[#staticTableProps + 1] = obj
+
         exports.ox_target:addLocalEntity(obj, {
             {
                 name = 'crafting_table_' .. i,
-                label = tableData.label or _('menu_title'),
+                label = tableData.label or L('menu_title'),
                 icon = 'fa-solid fa-screwdriver-wrench',
                 onSelect = function()
                     OpenCraftingMenu(tableData.categories)
@@ -97,37 +110,34 @@ CreateThread(function()
     end
 end)
 
+-- Portable Table Logic
 local function usePortableTable()
     local playerPed = PlayerPedId()
-    local coords = GetOffsetFromEntityInWorldCoords(playerPed, 0.0, 1.0, 0.0)
-    local heading = GetEntityHeading(playerPed)
+    if IsPedInAnyVehicle(playerPed, false) then return end
 
-    lib.requestAnimDict('amb@world_human_gardener_plant@male@base')
+    local coords = GetOffsetFromEntityInWorldCoords(playerPed, 0.0, 1.2, 0.0)
+    local heading = GetEntityHeading(playerPed)
 
     if lib.progressBar({
         duration = 3000,
-        label = _('deploy_table'),
+        label = L('deploy_table'),
         useWhileDead = false,
         canCancel = true,
         disable = { move = true, car = true },
-        anim = { dict = 'amb@world_human_gardener_plant@male@base', clip = 'base' }
+        anim = { dict = 'amb@prop_human_bum_bin@base', clip = 'base' }
     }) then
         TriggerServerEvent('z-crafting:server:deployTable', coords, heading)
     end
 end
 exports('usePortableTable', usePortableTable)
 
--- Portable Table Deployment (Old event kept for compatibility if needed elsewhere)
 RegisterNetEvent('z-crafting:client:deployTable', function()
     usePortableTable()
 end)
 
--- Handle Spawning Portable Table Props
+-- Sync Portable Tables
 RegisterNetEvent('z-crafting:client:syncTable', function(tableId, coords, heading)
-    -- Check if table already exists (prevent duplicates on restart)
-    if activePortableTables[tableId] then
-        return
-    end
+    if activePortableTables[tableId] then return end
     
     local model = Config.PortableTableProp
     lib.requestModel(model)
@@ -141,7 +151,7 @@ RegisterNetEvent('z-crafting:client:syncTable', function(tableId, coords, headin
     exports.ox_target:addLocalEntity(obj, {
         {
             name = 'portable_crafting_table_' .. tableId,
-            label = _('portable_bench'),
+            label = L('portable_bench'),
             icon = 'fa-solid fa-hammer',
             onSelect = function()
                 OpenCraftingMenu(Config.PortableCategories)
@@ -150,17 +160,16 @@ RegisterNetEvent('z-crafting:client:syncTable', function(tableId, coords, headin
         },
         {
             name = 'pickup_portable_table_' .. tableId,
-            label = _('pickup_table'),
+            label = L('pickup_table'),
             icon = 'fa-solid fa-hand-holding',
             onSelect = function()
-                lib.requestAnimDict('amb@world_human_gardener_plant@male@base')
                 if lib.progressBar({
                     duration = 2500,
-                    label = _('pickup_table'),
+                    label = L('pickup_table'),
                     useWhileDead = false,
                     canCancel = true,
                     disable = { move = true, car = true },
-                    anim = { dict = 'amb@world_human_gardener_plant@male@base', clip = 'base' }
+                    anim = { dict = 'anim@mp_snowball', clip = 'pickup_snowball' }
                 }) then
                     TriggerServerEvent('z-crafting:server:pickupTable', tableId)
                 end
@@ -172,20 +181,21 @@ end)
 
 RegisterNetEvent('z-crafting:client:removeTable', function(tableId)
     local obj = activePortableTables[tableId]
-    
     if obj and DoesEntityExist(obj) then
-        -- Request network control of the entity
-        local netId = NetworkGetNetworkIdFromEntity(obj)
-        NetworkRequestControlOfEntity(obj)
-        
-        -- Simple, direct deletion
-        SetEntityAsMissionEntity(obj, true, true)
         DeleteEntity(obj)
-        
-        -- Mark as no longer needed
-        SetEntityAsNoLongerNeeded(obj)
+    end
+    activePortableTables[tableId] = nil
+end)
+
+-- Cleanup on resource stop
+AddEventHandler('onResourceStop', function(resourceName)
+    if GetCurrentResourceName() ~= resourceName then return end
+    
+    for _, obj in pairs(activePortableTables) do
+        if DoesEntityExist(obj) then DeleteEntity(obj) end
     end
     
-    -- Clear from memory
-    activePortableTables[tableId] = nil
+    for _, obj in ipairs(staticTableProps) do
+        if DoesEntityExist(obj) then DeleteEntity(obj) end
+    end
 end)

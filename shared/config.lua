@@ -10,7 +10,7 @@ Config = {}
 -- General Settings
 --------------------------------------------------------------------------------
 
-Config.Debug = false
+Config.Debug = true
 Config.Locale = GetConvar('qbx:locale', 'en') -- Supported: 'en', 'fi'
 
 --------------------------------------------------------------------------------
@@ -76,98 +76,7 @@ Config.Leveling = {
 -- Define all craftable items with ingredients, requirements, and rewards
 --------------------------------------------------------------------------------
 
-Config.Recipes = {
-    ['weapons'] = {
-        label = 'Weapons',
-        icon = 'fa-solid fa-gun',
-        items = {
-            {
-                name = 'weapon_pistol',
-                label = 'Pistol',
-                description = 'Standard sidearm. Requires high-quality steel.',
-                duration = 20000,
-                blueprint = 'blueprint_pistol',
-                level = 5,
-                xp = 250,
-                ingredients = {
-                    { item = 'steel', amount = 15 },
-                    { item = 'wood', amount = 5 }
-                },
-                result = { item = 'weapon_pistol', amount = 1 }
-            }
-        }
-    },
-    ['tools'] = {
-        label = 'Tools',
-        icon = 'fa-solid fa-wrench',
-        items = {
-            {
-                name = 'lockpick',
-                label = 'Lockpick',
-                description = 'Essential for illegal activities.',
-                duration = 5000,
-                level = 1,
-                xp = 50,
-                ingredients = {
-                    { item = 'steel', amount = 2 },
-                    { item = 'plastic', amount = 1 }
-                },
-                result = { item = 'lockpick', amount = 1 }
-            },
-            {
-                name = 'weapon_crowbar',
-                label = 'Crowbar',
-                description = 'Heavy duty prying tool.',
-                duration = 8000,
-                level = 3,
-                xp = 120,
-                ingredients = {
-                    { item = 'steel', amount = 10 }
-                },
-                result = { item = 'weapon_crowbar', amount = 1 }
-            }
-        }
-    },
-    ['materials'] = {
-        label = 'Materials',
-        icon = 'fa-solid fa-box-open',
-        items = {
-            {
-                name = 'electronic_parts',
-                label = 'Electronic Parts',
-                description = 'Component for complex machines.',
-                duration = 3000,
-                level = 2,
-                xp = 35,
-                ingredients = {
-                    { item = 'wire', amount = 5 }
-                },
-                result = { item = 'electronic_parts', amount = 1 }
-            }
-        }
-    },
-    ['portable'] = {
-        label = 'Engineering',
-        icon = 'fa-solid fa-gears',
-        items = {
-            {
-                name = Config.PortableTableItem,
-                label = 'Portable Crafting Table',
-                description = 'A portable bench for on-the-go engineering. Universal utility.',
-                duration = 30000,
-                level = 10,
-                xp = 1000,
-                ingredients = {
-                    { item = 'steel', amount = 100 },
-                    { item = 'electronic_parts', amount = 25 },
-                    { item = 'wood', amount = 20 },
-                    { item = 'wire', amount = 50 }
-                },
-                result = { item = Config.PortableTableItem, amount = 1 }
-            }
-        }
-    }
-}
+Config.Recipes = {}
 
 Config.Locales = {
     ['en'] = {

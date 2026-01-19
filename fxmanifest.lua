@@ -18,6 +18,7 @@ files {
 shared_scripts {
     '@ox_lib/init.lua',
     'shared/config.lua',
+    'shared/recipes/*.lua',
     'shared/utils.lua'
 }
 

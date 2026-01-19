@@ -16,11 +16,11 @@ window.addEventListener('message', (event) => {
     const data = event.data;
 
     if (data.action === 'open') {
-        Recipes = data.recipes;
-        Inventory = data.inventory.items;
-        PlayerLevel = data.inventory.level;
-        PlayerXP = data.inventory.xp;
-        MaxXP = data.inventory.nextLevelXP;
+        Recipes = data.recipes || {};
+        Inventory = data.inventory || {};
+        PlayerLevel = data.level || 1;
+        PlayerXP = data.xp || 0;
+        MaxXP = data.nextLevelXP || 100;
 
         updateLevelUI();
         setupCategories(data.allowedCategories);
@@ -163,21 +163,26 @@ function selectRecipe(item, card, isBlueprintLocked, isLevelLocked) {
     });
 
     const craftBtn = document.getElementById('craft-button');
+    const hasEnoughIngredients = totalMet === totalReq;
+
     if (isLevelLocked) {
         craftBtn.innerHTML = `<span class="btn-text">REQUIRES LEVEL ${item.level}</span>`;
-        craftBtn.style.background = '#331a00';
+        craftBtn.className = 'craft-btn locked';
         craftBtn.style.pointerEvents = 'none';
-        craftBtn.style.boxShadow = 'none';
     } else if (isBlueprintLocked) {
         craftBtn.innerHTML = '<span class="btn-text">LOCKED: NEED BLUEPRINT</span>';
-        craftBtn.style.background = '#222';
+        craftBtn.className = 'craft-btn locked';
         craftBtn.style.pointerEvents = 'none';
-        craftBtn.style.boxShadow = 'none';
+    } else if (!hasEnoughIngredients) {
+        craftBtn.innerHTML = '<span class="btn-text">MISSING COMPONENTS</span>';
+        craftBtn.className = 'craft-btn missing';
+        craftBtn.style.pointerEvents = 'none';
+        craftBtn.style.background = '#444';
     } else {
         craftBtn.innerHTML = '<span class="btn-text">START ASSEMBLY</span><div class="btn-shine"></div>';
-        craftBtn.style.background = 'var(--accent)';
+        craftBtn.className = 'craft-btn active';
         craftBtn.style.pointerEvents = 'all';
-        craftBtn.style.boxShadow = '';
+        craftBtn.style.background = 'var(--accent)';
     }
 
     document.getElementById('comp-count').innerText = isLocked ? "ACCESS DENIED" : `${totalMet}/${totalReq} READY`;
